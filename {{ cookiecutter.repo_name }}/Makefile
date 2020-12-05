@@ -1,12 +1,13 @@
-.PHONY: clean data lint requirements sync_data_to_s3 sync_data_from_s3
+.PHONY: clean data lint requirements sync_data_to_gcs sync_data_from_gcs
 
 #################################################################################
 # GLOBALS                                                                       #
 #################################################################################
 
 PROJECT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
-BUCKET = {{ cookiecutter.s3_bucket }}
-PROFILE = {{ cookiecutter.aws_profile }}
+BUCKET = {{ cookiecutter.gcs_bucket }}
+BQDATASET = {{ cookiecutter.bq_dataset }}
+GCPPROJECT = {{ cookiecutter.gcp_project }}
 PROJECT_NAME = {{ cookiecutter.repo_name }}
 PYTHON_INTERPRETER = {{ cookiecutter.python_interpreter }}
 
@@ -38,20 +39,20 @@ clean:
 lint:
 	flake8 src
 
-## Upload Data to S3
-sync_data_to_s3:
-ifeq (default,$(PROFILE))
-	aws s3 sync data/ s3://$(BUCKET)/data/
+## Upload Data to GCS
+sync_data_to_gcs:
+ifeq (default,$(GCPPROJECT))
+	gsutil rsync data/ gs://$(BUCKET)/data/
 else
-	aws s3 sync data/ s3://$(BUCKET)/data/ --profile $(PROFILE)
+	gsutil rsync data/ gs://$(BUCKET)/data/ --profile $(GCPPROJECT)
 endif
 
 ## Download Data from S3
-sync_data_from_s3:
-ifeq (default,$(PROFILE))
-	aws s3 sync s3://$(BUCKET)/data/ data/
+sync_data_from_gcs:
+ifeq (default,$(GCPPROJECT))
+	gsutil rsync gs://$(BUCKET)/data/ data/
 else
-	aws s3 sync s3://$(BUCKET)/data/ data/ --profile $(PROFILE)
+	gsutil rsync gs://$(BUCKET)/data/ data/ --profile $(GCPPROJECT)
 endif
 
 ## Set up python interpreter environment
